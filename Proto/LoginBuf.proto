@@ -1,0 +1,16 @@
+syntax = "proto3";
+import "Command.proto";
+package msg;
+
+
+option csharp_namespace = "msg";
+option java_package = "com.weiyi.gameserver.protocol";
+
+message GetTokenMessage{
+    CommandType cmd = 1;
+}
+
+message LoginMessage{
+    CommandType cmd = 1;
+    string token = 2;
+}

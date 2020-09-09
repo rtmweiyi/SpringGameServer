@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Application",
+            "request": "launch",
+            "mainClass": "com.weiyi.zhumao.Application",
+            "projectName": "zhumao"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<gameserver>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "mainClass": "com.weiyi.zhumao.Application",
+            "projectName": "gameserver",
+            "args": ""
+        }
+    ]
+}

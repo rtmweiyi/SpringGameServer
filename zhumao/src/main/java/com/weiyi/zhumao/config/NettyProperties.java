@@ -18,6 +18,17 @@ public class NettyProperties {
         return tcpPort;
     }
 
+    @Size(min=1000, max=65535)
+    private int udpPort;
+
+    public void setUdpPort(int udpPort){
+        this.udpPort = udpPort;
+    }
+
+    public int getUdpPort(){
+        return udpPort;
+    }
+
     @Min(1)
     private int bossCount;
 

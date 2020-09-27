@@ -15,6 +15,9 @@ public interface Server {
 	}
 	
 	TransmissionProtocol getTransmissionProtocol();
+
+	void startServer() throws Exception;
+	void startServer(int port) throws Exception;
 	
 	void startServer(InetSocketAddress socketAddress) throws Exception;
 	

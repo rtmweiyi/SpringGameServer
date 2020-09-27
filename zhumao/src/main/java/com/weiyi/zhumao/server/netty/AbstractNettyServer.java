@@ -4,6 +4,11 @@ import java.net.InetSocketAddress;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.ChannelGroupFuture;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 // import io.netty.channel.group.DefaultChannelGroup;
@@ -21,20 +26,60 @@ public abstract class AbstractNettyServer implements NettyServer {
 	protected ServerBootstrap serverBootstrap;
 	protected GameAdminService gameAdminService;
 
+	public static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("NADRON-CHANNELS",
+			GlobalEventExecutor.INSTANCE);
+	protected final NettyConfig nettyConfig;
+	protected ChannelInitializer<? extends Channel> channelInitializer;
+
 	protected Channel serverChannel;
 
-	public AbstractNettyServer() {
-		super();
+	public AbstractNettyServer(NettyConfig nettyConfig, ChannelInitializer<? extends Channel> channelInitializer) {
+		this.nettyConfig = nettyConfig;
+		this.channelInitializer = channelInitializer;
+	}
+
+	@Override
+	public void startServer(int port) throws Exception {
+		nettyConfig.setPortNumber(port);
+		nettyConfig.setSocketAddress(new InetSocketAddress(port));
+		startServer();
+	}
+
+	@Override
+	public void startServer(InetSocketAddress socketAddress) throws Exception {
+		nettyConfig.setSocketAddress(socketAddress);
+		startServer();
 	}
 
 	@Override
 	public void stopServer() throws Exception {
 		log.debug("In stopServer method of class: {}", this.getClass().getName());
-		if (serverChannel != null) {
-			serverChannel.close();
-			serverChannel.parent().close();
+		ChannelGroupFuture future = ALL_CHANNELS.close();
+		try {
+			future.await();
+		} catch (InterruptedException e) {
+			log.error("Execption occurred while waiting for channels to close: {}", e);
+		} finally {
+			// TODO move this part to spring.
+			if (null != nettyConfig.getBossGroup()) {
+				nettyConfig.getBossGroup().shutdownGracefully();
+			}
+			if (null != nettyConfig.getWorkerGroup()) {
+				nettyConfig.getWorkerGroup().shutdownGracefully();
+			}
+			gameAdminService.shutdown();
 		}
-		gameAdminService.shutdown();
+	}
+
+	@Override
+	public ChannelInitializer<? extends Channel> getChannelInitializer()
+	{
+		return channelInitializer;
+	}
+
+	@Override
+	public NettyConfig getNettyConfig() {
+		return nettyConfig;
 	}
 
 	public GameAdminService getGameAdminService() {
@@ -50,9 +95,6 @@ public abstract class AbstractNettyServer implements NettyServer {
 		return socketAddress;
 	}
 
-	public void setInetAddress(InetSocketAddress inetAddress) {
-		this.socketAddress = inetAddress;
-	}
 
 	@Override
 	public String toString() {

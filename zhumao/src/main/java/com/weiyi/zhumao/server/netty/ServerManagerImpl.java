@@ -22,8 +22,8 @@ public class ServerManagerImpl implements ServerManager
     @Autowired
 	AbstractNettyServer tcpServer;
 
-	@Autowired
-	InetSocketAddress socketAddress;
+	// @Autowired
+	// InetSocketAddress socketAddress;
 
 	
 	public ServerManagerImpl()
@@ -34,8 +34,8 @@ public class ServerManagerImpl implements ServerManager
 	@Override
 	public void startServers() throws Exception 
 	{
-		log.info("Server start!");
-		tcpServer.startServer(socketAddress);
+		// log.info("Server start!");
+		// tcpServer.startServer(socketAddress);
 		servers.add(tcpServer);
 	}
 	

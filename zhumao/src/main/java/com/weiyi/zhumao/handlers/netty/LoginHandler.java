@@ -5,6 +5,8 @@ import java.net.SocketAddress;
 // import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.text.DefaultEditorKit.CutAction;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -20,7 +22,6 @@ import com.weiyi.zhumao.app.PlayerSession;
 import com.weiyi.zhumao.app.Session;
 import com.weiyi.zhumao.app.impl.DefaultPlayer;
 import com.weiyi.zhumao.communication.NettyTCPMessageSender;
-import com.weiyi.zhumao.entity.Shop;
 import com.weiyi.zhumao.entity.User;
 import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.Events;
@@ -31,7 +32,6 @@ import com.weiyi.zhumao.service.SessionRegistryService;
 import com.weiyi.zhumao.service.TaskManagerService;
 // import com.weiyi.zhumao.service.UniqueIDGeneratorService;
 import com.weiyi.zhumao.service.impl.ReconnectSessionRegistry;
-import com.weiyi.zhumao.service.impl.ShopService;
 import com.weiyi.zhumao.service.impl.UserService;
 
 // import com.weiyi.zhumao.util.JetConfig;
@@ -48,8 +48,6 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 	// Autowired
 	@Autowired
 	UserService userService;
-	@Autowired
-	ShopService shopService;
 
 	@Autowired
 	CustomMatchmaker customMatchmaker;
@@ -75,8 +73,8 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 		int type = event.getType();
 		if (Events.LOG_IN == type) {
 			log.debug("Login attempt from {}", channel.remoteAddress());
-			Player player = createPlayer(buffer, channel);
-			handleLogin(player, channel, buffer);
+			// Player player = createPlayer(buffer, channel);
+			handleLogin(channel, buffer);
 		} else if (Events.RECONNECT == type) {
 			log.debug("Reconnect attempt from {}", channel.remoteAddress());
 			String reconnectKey = NettyUtils.readString(buffer);
@@ -84,8 +82,8 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 			handleReconnect(playerSession, channel, buffer);
 		} else if (Events.GET_TOKEN == type) {
 			String token = RandomString.getAlphaNumericString(10);
-			var user = userService.register("Guest", token);
-			shopService.register(user.getId(), "0,1","0");
+			String name = token.substring(0, 5);
+			var user = userService.register("Guest"+name, token,"0,1","0",0);
 
 			ByteBuf rebuffer = Unpooled.wrappedBuffer(NettyUtils.createBufferForOpcode(Events.GET_TOKEN_SUCCESS),
 					NettyUtils.writeString(token));
@@ -99,20 +97,55 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 		else if(Events.CHANGE_CAR==type){
 			String token = NettyUtils.readString(buffer);
 			User user = userService.getUserByToken(token);
-			Shop shop = shopService.getShopById(user.getId());
 			String currentCar = NettyUtils.readString(buffer);
-			if(!currentCar.equals(shop.getCurrentCar())){
-				shop.setCurrentCar(currentCar);
-				shopService.updateShop(shop);
+			if(!currentCar.equals(user.getCurrentCar())){
+				user.setCurrentCar(currentCar);
+				userService.updateUser(user);
 			}
 			ByteBuf rebuffer = Unpooled.wrappedBuffer(NettyUtils.createBufferForOpcode(Events.CHANGE_CAR_SUCCESS),
 					NettyUtils.writeString(currentCar));
 			channel.writeAndFlush(rebuffer);
 		}
+		else if(Events.Add_COINS==type){
+			String token = NettyUtils.readString(buffer);
+			User user = userService.getUserByToken(token);
+			// TODO 这里要设置一个检查机制
+			String actionType = NettyUtils.readString(buffer);
+			if(actionType.equals("ADS")){
+				int currentCoins = user.getCoins();
+				currentCoins+=2;
+				user.setCoins(currentCoins);
+				userService.updateUser(user);
+				ByteBuf successBuf = NettyUtils.createBufferForOpcode(Events.CHANGE_CAR_SUCCESS);
+				successBuf.writeInt(currentCoins);
+				channel.writeAndFlush(successBuf);
+			}
+			else if(actionType.equals("GAMEEND")){
+				int currentCoins = user.getCoins();
+				currentCoins+=1;
+				user.setCoins(currentCoins);
+				userService.updateUser(user);
+				ByteBuf successBuf = NettyUtils.createBufferForOpcode(Events.CHANGE_CAR_SUCCESS);
+				successBuf.writeInt(currentCoins);
+				channel.writeAndFlush(successBuf);
+			}
+			else{
+				ByteBuf failureBuf = NettyUtils.createBufferForOpcode(Events.Add_COINS_FAILURE);
+				channel.writeAndFlush(failureBuf);
+			}
+		}
+		else if(Events.SESSION_MESSAGE==type){
+			//游戏结束返回大厅后，切换协议，还会有之前游戏的包
+			//尝试清除
+			int readSize = buffer.readableBytes();
+			byte[] dst = new byte[readSize];
+			buffer.readBytes(dst);
+			log.info("Drop not use bytes: "+readSize);
+		}
 		else {
 			log.error("Invalid event {} sent from remote address {}. " + "Going to close channel {}",
 					new Object[] { event.getType(), channel.remoteAddress(), channel.id() });
-			closeChannelWithLoginFailure(channel);
+			// closeChannelWithLoginFailure(channel);
 		}
 	}
 
@@ -124,15 +157,15 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 	// .channel().id(), CHANNEL_COUNTER.incrementAndGet());
 	// }
 
-	public Player createPlayer(final ByteBuf buffer, final Channel channel) {
-		String token = NettyUtils.readString(buffer);
-		User user = userService.getUserByToken(token);
-		if (user == null) {
-			log.info("no user");
-			return null;
-		}
-		return new DefaultPlayer(user.getId(), user.getName());
-	}
+	// public Player createPlayer(final ByteBuf buffer, final Channel channel) {
+	// 	String token = NettyUtils.readString(buffer);
+	// 	User user = userService.getUserByToken(token);
+	// 	if (user == null) {
+	// 		log.info("no user");
+	// 		return null;
+	// 	}
+	// 	return new DefaultPlayer(user.getId(), user.getName());
+	// }
 
 	public PlayerSession lookupSession(final String reconnectKey) {
 		PlayerSession playerSession = (PlayerSession) reconnectRegistry.getSession(reconnectKey);
@@ -151,21 +184,25 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 		return playerSession;
 	}
 
-	public void handleLogin(Player player, Channel channel, ByteBuf buffer) {
-		if (null != player) {
-			Shop shop = shopService.getShopById((long)player.getId());
-			ByteBuf buf = NettyUtils.createBufferForOpcode(Events.LOG_IN_SUCCESS);
-			buf.writeLong((long)player.getId());
-			buf = Unpooled.wrappedBuffer(buf,NettyUtils.writeString(player.getName()));
-			buf = Unpooled.wrappedBuffer(buf,NettyUtils.writeString(shop.getCars()));
-			buf = Unpooled.wrappedBuffer(buf,NettyUtils.writeString(shop.getCurrentCar()));
-			channel.writeAndFlush(buf);
-			// handleGameRoomJoin(player, channel, buffer);
-			channel.pipeline().addLast("JoinRoomHandler",new JoinRoomHandler(player, customMatchmaker));
-		} else {
+	public void handleLogin(Channel channel, ByteBuf buffer) {
+		String token = NettyUtils.readString(buffer);
+		User user = userService.getUserByToken(token);
+		if (user == null) {
+			log.info("no user");
 			// Write future and close channel
 			closeChannelWithLoginFailure(channel);
+			return;
 		}
+		var player = new DefaultPlayer(user.getId(), user.getName());
+		ByteBuf buf = NettyUtils.createBufferForOpcode(Events.LOG_IN_SUCCESS);
+		buf.writeLong((long) player.getId());
+		buf = Unpooled.wrappedBuffer(buf, NettyUtils.writeString(user.getName()));
+		buf = Unpooled.wrappedBuffer(buf, NettyUtils.writeString(user.getCars()));
+		buf = Unpooled.wrappedBuffer(buf, NettyUtils.writeString(user.getCurrentCar()));
+		buf.writeInt(user.getCoins());
+		channel.writeAndFlush(buf);
+		// handleGameRoomJoin(player, channel, buffer);
+		channel.pipeline().addLast("JoinRoomHandler", new JoinRoomHandler(player, customMatchmaker));
 	}
 
 	protected void handleReconnect(PlayerSession playerSession, Channel channel, ByteBuf buffer) {

@@ -14,6 +14,9 @@ public class User {
     private String name;
     private String token;
     private long createdAt;
+    private String cars;
+    private String currentCar;
+    private int coins;
 
     public ZonedDateTime getCreatedDateTime() {
 		return Instant.ofEpochMilli(this.createdAt).atZone(ZoneId.systemDefault());

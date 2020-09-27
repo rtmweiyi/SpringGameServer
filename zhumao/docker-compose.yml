@@ -1,0 +1,14 @@
+mysqldb:
+  image: mysql:5.7
+  environment:
+   - MYSQL_ROOT_PASSWORD=282713Fx
+   - MYSQL_DATABASE=db
+  restart: unless-stopped
+
+gameserver:
+  image: zhumao:latest
+  ports:
+    - "5000:5000"
+  links:
+    - mysqldb
+  restart: unless-stopped

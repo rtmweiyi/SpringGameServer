@@ -2,8 +2,10 @@ package com.weiyi.zhumao.app;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
 
 import io.netty.channel.Channel;
+
 import com.weiyi.zhumao.app.impl.DefaultPlayer;
 import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.NetworkEvent;
@@ -72,7 +74,7 @@ public interface GameRoom
 	 * 
 	 * @return Returns the set of user sessions associated with game room.
 	 */
-	public abstract Set<PlayerSession> getSessions();
+	public abstract List<PlayerSession> getSessions();
 
 	/**
 	 * @return Returns the name of the game room
@@ -149,7 +151,7 @@ public interface GameRoom
 	 * @param sessions
 	 *            The set of sessions to be set.
 	 */
-	public abstract void setSessions(Set<PlayerSession> sessions);
+	public abstract void setSessions(List<PlayerSession> sessions);
 
 	/**
 	 * Used to send an event to the GameRoom. The room can listen on this method
@@ -193,5 +195,8 @@ public interface GameRoom
 
 	public abstract void spawnPlayer(PlayerSession playerSession);
 
-	public abstract void removePlayer(long id);
+	public abstract void removePlayer(Command cmd);
+	public abstract void setTaskHolder(ScheduledFuture<?> holder);
+	public abstract ScheduledFuture<?> getTaskHolder();
+	public abstract void leaveProtocol(PlayerSession session);
 }

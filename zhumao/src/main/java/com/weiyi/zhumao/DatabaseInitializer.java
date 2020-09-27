@@ -19,15 +19,18 @@ public class DatabaseInitializer {
 		try (var conn = dataSource.getConnection()) {
 			try (var stmt = conn.createStatement()) {
 				stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" //
-						+ "id BIGINT IDENTITY NOT NULL PRIMARY KEY, " //
+						+ "id BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY, " //
 						+ "name VARCHAR(100) NOT NULL, " //
 						+ "token VARCHAR(100) NOT NULL, " //
+						+ "cars VARCHAR(100) NOT NULL, " //
+						+ "currentCar VARCHAR(100) NOT NULL, "//
+						+ "coins INT NOT NULL, "//
 						+ "createdAt BIGINT NOT NULL)");
 				
-				stmt.executeUpdate("CREATE TABLE IF NOT EXISTS shop (" //
-				+ "id BIGINT NOT NULL PRIMARY KEY, " //
-				+ "cars VARCHAR(100) NOT NULL, " //
-				+ "currentCar VARCHAR(100) NOT NULL)");
+				// stmt.executeUpdate("CREATE TABLE IF NOT EXISTS shop (" //
+				// + "id BIGINT NOT NULL PRIMARY KEY, " //
+				
+				// )");
 			}
 		}
 	}

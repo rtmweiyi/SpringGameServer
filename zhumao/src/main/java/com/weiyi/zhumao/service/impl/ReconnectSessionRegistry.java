@@ -59,13 +59,13 @@ public class ReconnectSessionRegistry extends SessionRegistry<String>
 		}
 
 		@Override
-		public Object getId()
+		public int getId()
 		{
-			return null;
+			return 0;
 		}
 
 		@Override
-		public void setId(Object id)
+		public void setId(int id)
 		{
 		}
 

@@ -59,6 +59,10 @@ public class Events
 	public static final byte GET_TOKEN = 0x25;
 	public static final byte GET_TOKEN_SUCCESS = 0x26;
 	public static final byte GET_TOKEN_FAILURE = 0x27;
+	//Add Coins
+	public static final byte Add_COINS = 0x40;
+	public static final byte Add_COINS_SUCCESS = 0x41;
+	public static final byte Add_COINS_FAILURE = 0x42;
 
 	//Error
 	public static final byte ERROR = 0x28;

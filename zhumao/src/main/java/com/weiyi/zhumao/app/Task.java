@@ -20,11 +20,11 @@ public interface Task extends Runnable
 	 *         implementations, this value has to be unique across multiple
 	 *         server nodes.
 	 */
-	Object getId();
+	int getId();
 
 	/**
 	 * @param id
 	 *            Set the unique task id.
 	 */
-	void setId(Object id);
+	void setId(int id);
 }

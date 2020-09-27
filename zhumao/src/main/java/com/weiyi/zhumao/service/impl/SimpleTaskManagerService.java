@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.weiyi.zhumao.app.Task;
 import com.weiyi.zhumao.service.TaskManagerService;
 
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
 
 
 /**
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Component;
  * 
  */
 
+@Slf4j
 public class SimpleTaskManagerService extends ScheduledThreadPoolExecutor implements
 		TaskManagerService
 {
@@ -55,6 +57,7 @@ public class SimpleTaskManagerService extends ScheduledThreadPoolExecutor implem
 	public ScheduledFuture scheduleAtFixedRate(Task task, long initialDelay,
 			long period, TimeUnit unit)
 	{
+		log.info("start: "+Task.class.getName());
 		task.setId(taskNum.incrementAndGet());
 		return super.scheduleAtFixedRate(task, initialDelay, period, unit);
 	}
@@ -67,5 +70,4 @@ public class SimpleTaskManagerService extends ScheduledThreadPoolExecutor implem
 		task.setId(taskNum.incrementAndGet());
 		return super.scheduleWithFixedDelay(task, initialDelay, delay, unit);
 	}
-
 }

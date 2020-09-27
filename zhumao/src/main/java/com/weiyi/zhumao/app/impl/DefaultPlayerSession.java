@@ -98,7 +98,6 @@ public class DefaultPlayerSession extends DefaultSession implements
 	@Override
 	public Player getPlayer()
 	{
-		//TODO 游戏结束后加入到JoinRoomHandler,以便可以重新开始匹配 
 		return player;
 	}
 

@@ -12,13 +12,13 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE token = #{token}")
     User getByToken(@Param("token") String token);
     
-    @Update("UPDATE users SET name = #{user.name}, createdAt = #{user.createdAt} WHERE id = #{user.id}")
+    @Update("UPDATE users SET name = #{user.name},cars = #{user.cars}, currentCar = #{user.currentCar},coins = #{user.coins},createdAt = #{user.createdAt} WHERE id = #{user.id}")
     void update(@Param("user") User user);
     
     @Delete("DELETE FROM users WHERE id = #{id}")
     void deleteById(@Param("id") long id);
     
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-	@Insert("INSERT INTO users (name, token, createdAt) VALUES (#{user.name}, #{user.token},#{user.createdAt})")
+	@Insert("INSERT INTO users (name, token, cars, currentCar, coins, createdAt) VALUES (#{user.name}, #{user.token},#{user.cars},#{user.currentCar},#{user.coins},#{user.createdAt})")
 	void insert(@Param("user") User user);
 }

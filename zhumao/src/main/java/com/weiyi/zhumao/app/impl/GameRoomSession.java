@@ -1,8 +1,10 @@
 package com.weiyi.zhumao.app.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+// import java.util.HashSet;
+import java.util.List;
+// import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import com.weiyi.zhumao.app.Game;
@@ -41,9 +43,9 @@ public abstract class GameRoomSession extends DefaultSession implements GameRoom
 	protected GameStateManagerService stateManager;
 
 	/**
-	 * The set of sessions in this object.
+	 * The List of sessions in this object.
 	 */
-	protected Set<PlayerSession> sessions;
+	protected List<PlayerSession> sessions;
 	
 	/**
 	 * Each game room has its own protocol for communication with client.
@@ -70,7 +72,7 @@ public abstract class GameRoomSession extends DefaultSession implements GameRoom
 	
 	public static class GameRoomSessionBuilder extends SessionBuilder
 	{
-		protected Set<PlayerSession> sessions;
+		protected List<PlayerSession> sessions;
 		protected Game parentGame;
 		protected String gameRoomName;
 		protected Protocol protocol;
@@ -90,7 +92,7 @@ public abstract class GameRoomSession extends DefaultSession implements GameRoom
 			}
 			if (null == sessions)
 			{
-				sessions = new HashSet<PlayerSession>();
+				sessions = new ArrayList<PlayerSession>();
 			}
 			if (null == laneStrategy)
 			{
@@ -99,7 +101,7 @@ public abstract class GameRoomSession extends DefaultSession implements GameRoom
 			creationTime = System.currentTimeMillis();
 		}
 		
-		public GameRoomSessionBuilder sessions(Set<PlayerSession> sessions)
+		public GameRoomSessionBuilder sessions(List<PlayerSession> sessions)
 		{
 			this.sessions = sessions;
 			return this;
@@ -212,13 +214,13 @@ public abstract class GameRoomSession extends DefaultSession implements GameRoom
 	}
 	
 	@Override
-	public Set<PlayerSession> getSessions()
+	public List<PlayerSession> getSessions()
 	{
 		return sessions;
 	}
 
 	@Override
-	public void setSessions(Set<PlayerSession> sessions)
+	public void setSessions(List<PlayerSession> sessions)
 	{
 		this.sessions = sessions;
 	}

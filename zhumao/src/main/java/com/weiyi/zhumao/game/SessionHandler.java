@@ -37,11 +37,20 @@ public class SessionHandler extends DefaultSessionEventHandler implements GameCo
         tickbuf.writeInt(tick);
         ByteBuf cmdBuf = Unpooled.wrappedBuffer(tickbuf,buf);
         Command cmd = new Command(cmdBuf);
-        if(cmd.getCmdType()==Commands.leave_room){
-            long id = (long)cmd.getContent().get(0);
-            gameRoom.removePlayer(id);
+        if(cmd.getCmdType()==Commands.kill){
+            gameRoom.removePlayer(cmd);
         }
-        gameRoom.addCommand(cmd);
+        else if(cmd.getCmdType()==Commands.leave_room){
+            long deathId = (long)cmd.getContent().get(0);
+            long sessionId = (long)pSession.getPlayer().getId();
+            if(deathId==sessionId){
+                log.info("id leave: "+deathId);
+                gameRoom.leaveProtocol(pSession);
+            }
+        }
+        else{
+            gameRoom.addCommand(cmd);
+        }
     }
 
     public void onDataIn(Event event){

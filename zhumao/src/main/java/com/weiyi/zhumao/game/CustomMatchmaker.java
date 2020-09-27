@@ -20,7 +20,7 @@ import com.weiyi.zhumao.protocols.impl.MessageBufferProtocol;
 import com.weiyi.zhumao.service.TaskManagerService;
 import com.weiyi.zhumao.service.UniqueIDGeneratorService;
 import com.weiyi.zhumao.service.impl.ReconnectSessionRegistry;
-import com.weiyi.zhumao.service.impl.ShopService;
+import com.weiyi.zhumao.service.impl.UserService;
 import com.weiyi.zhumao.util.JetConfig;
 import com.weiyi.zhumao.util.NettyUtils;
 
@@ -50,10 +50,11 @@ public class CustomMatchmaker {
 	@Autowired
 	AppProperties appProperties;
 	@Autowired
-	ShopService shopService;
+	UserService userService;
 
 
 	private int nums;
+	private boolean checkPoint = false;
 	
 	AtomicLong roomId = new AtomicLong(0);
 
@@ -69,19 +70,44 @@ public class CustomMatchmaker {
 	
 
     public synchronized void addPlayerAndChannel(Player player,Channel channel){
-        playersInWaitingMap.put(player, channel);
-        if(playersInWaitingMap.size()==nums){
-			SimpleGameRoom gameRoom = createGameRoom();
-			gameRoom.setShopService(shopService);
+		int playersNum = playersInWaitingMap.size();
+		if(playersNum==0){
+			checkPoint = true;
+		}
+		playersInWaitingMap.put(player, channel);	
+        if(playersNum==nums){
+			SimpleGameRoom gameRoom = createGameRoom(0);
+			gameRoom.setUserService(userService);
             for(Map.Entry<Player,Channel> entry:playersInWaitingMap.entrySet()){
                 Player _player = entry.getKey();
                 Channel _channel = entry.getValue();
                 handleGameRoomJoin(gameRoom,_player,_channel);
 			}
 			playersInWaitingMap.clear();
-			taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
+			var holder = taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
+			gameRoom.setTaskHolder(holder);
+			checkPoint = false;
         }
-    }
+	}
+	
+	public synchronized void startGameWithRobots(){
+		if(checkPoint){
+			int playersNum = playersInWaitingMap.size();
+			int robots = nums - playersNum;
+			log.info("开始游戏:"+robots);
+			SimpleGameRoom gameRoom = createGameRoom(robots);
+			gameRoom.setUserService(userService);
+			for (Map.Entry<Player, Channel> entry : playersInWaitingMap.entrySet()) {
+				Player _player = entry.getKey();
+				Channel _channel = entry.getValue();
+				handleGameRoomJoin(gameRoom, _player, _channel);
+			}
+			playersInWaitingMap.clear();
+			var holder = taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
+			gameRoom.setTaskHolder(holder);
+			checkPoint = false;
+		}
+	}
 
     public void handleGameRoomJoin(GameRoom gameRoom,Player player, Channel channel) {
 
@@ -135,11 +161,11 @@ public class CustomMatchmaker {
 		});
 	}
 
-	public SimpleGameRoom createGameRoom(){
+	public SimpleGameRoom createGameRoom(int robots){
 		GameRoomSessionBuilder sessionBuilder = new GameRoomSessionBuilder();
 		long id = getNextId();
         sessionBuilder.parentGame(new SimpleGame(id,"defaultgame")).gameRoomName("defaultroom"+id).protocol(messageBufferProtocol).lobbyProtocol(lobbyProtocol);
-        SimpleGameRoom gameroom = new SimpleGameRoom(sessionBuilder,nums);
+        SimpleGameRoom gameroom = new SimpleGameRoom(sessionBuilder,nums,robots);
         return gameroom;
 	}
 

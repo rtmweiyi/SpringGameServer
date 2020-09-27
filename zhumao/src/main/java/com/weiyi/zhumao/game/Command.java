@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 public class Command implements Comparable<Command>{
     protected int tick;
+    protected long timestamp;
     protected int playerId;
     protected int cmdType;
     protected List<Object> content = new ArrayList<>();
@@ -19,6 +20,7 @@ public class Command implements Comparable<Command>{
     public Command(ByteBuf inbuf) {
         buf = inbuf.copy();
         tick = inbuf.readInt();
+        timestamp = inbuf.readLong();
         cmdType = inbuf.readInt();
         switch (cmdType) {
             case 1:

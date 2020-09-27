@@ -29,11 +29,17 @@ public class UserService {
         return user;
     }
 
-    public User register(String name, String token) {
+    public User register(String name, String token,String cars, String currentCar,int coins) {
 		User user = new User();
         user.setName(name);
         user.setToken(token);
+        user.setCars(cars);
+        user.setCurrentCar(currentCar);
+        user.setCoins(coins);
 		userMapper.insert(user);
 		return user;
+    }
+    public void updateUser(User user) {
+		userMapper.update(user);
     }
 }

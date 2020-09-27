@@ -11,7 +11,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class SyncTask implements Task{
-    private Object id;
+    private int id;
     private GameRoom room;
 
     @Override
@@ -34,12 +34,12 @@ public class SyncTask implements Task{
     }
 
     @Override
-    public Object getId() {
+    public int getId() {
         return id;
     }
 
     @Override
-    public void setId(Object id) {
+    public void setId(int id) {
         this.id = id;
     }
     

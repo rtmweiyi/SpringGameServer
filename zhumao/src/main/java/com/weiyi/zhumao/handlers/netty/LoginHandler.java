@@ -267,32 +267,6 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 		// loginUdp(playerSession, buffer);
 	}
 
-	// public void connectToGameRoom(final GameRoom gameRoom, final PlayerSession playerSession, ChannelFuture future) {
-	// 	future.addListener(new ChannelFutureListener() {
-	// 		@Override
-	// 		public void operationComplete(ChannelFuture future) throws Exception {
-	// 			Channel channel = future.channel();
-	// 			log.debug("Sending GAME_ROOM_JOIN_SUCCESS to channel {} completed", channel.id());
-	// 			if (future.isSuccess()) {
-	// 				log.info("Going to clear pipeline");
-	// 				// Clear the existing pipeline
-	// 				NettyUtils.clearPipeline(channel.pipeline());
-	// 				// Set the tcp channel on the session.
-	// 				NettyTCPMessageSender sender = new NettyTCPMessageSender(channel);
-	// 				playerSession.setTcpSender(sender);
-	// 				// Connect the pipeline to the game room.
-	// 				gameRoom.connectSession(playerSession);
-	// 				// Send the connect event so that it will in turn send the START event.
-	// 				playerSession.onEvent(Events.connectEvent(sender));
-	// 				taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 30, TimeUnit.MILLISECONDS);
-	// 			} else {
-	// 				log.error("GAME_ROOM_JOIN_SUCCESS message sending to client was failure, channel will be closed");
-	// 				channel.close();
-	// 			}
-	// 		}
-	// 	});
-	// }
-
 	/**
 	 * This method adds the player session to the {@link SessionRegistryService}.
 	 * The key being the remote udp address of the client and the session being the

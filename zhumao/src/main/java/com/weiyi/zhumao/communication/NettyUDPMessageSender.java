@@ -109,7 +109,7 @@ public class NettyUDPMessageSender implements Fast
 		return sessionRegistryService;
 	}
 
-	protected static class EventContextImpl implements EventContext
+	public static class EventContextImpl implements EventContext
 	{
 		final InetSocketAddress clientAddress;
 		public EventContextImpl(InetSocketAddress clientAddress){

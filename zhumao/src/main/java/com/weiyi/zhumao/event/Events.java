@@ -29,8 +29,9 @@ public class Events
 	 * Similar to LOG_IN but parameters are different. This event is sent from
 	 * client to server.
 	 */
-	public static final byte RECONNECT = 0x3;
+	public final static byte RECONNECT = 0x3;
 	public final static byte CONNECT_FAILED = 0x06;
+	public final static byte UDP_CONNECT = 0x09;
 	/**
 	 * Event used to log in to a server from a remote client. Example payload
 	 * will be <b>login opcode 0x08-protocl version 0x01- username as string

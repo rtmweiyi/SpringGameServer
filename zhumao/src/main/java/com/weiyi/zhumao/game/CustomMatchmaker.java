@@ -73,21 +73,24 @@ public class CustomMatchmaker {
     protected ReconnectSessionRegistry reconnectRegistry;
 
 	private Map<Player,Channel> playersInWaitingMap = new HashMap<>();
+	private Map<Player,InetSocketAddress> updAddressMap = new HashMap<>();
 	
 
-    public synchronized void addPlayerAndChannel(Player player,Channel channel){
+    public synchronized void addPlayerAndChannel(Player player,Channel channel, InetSocketAddress addre){
 		int playersNum = playersInWaitingMap.size();
 		if(playersNum==0){
 			checkPoint = true;
 		}
-		playersInWaitingMap.put(player, channel);	
+		playersInWaitingMap.put(player, channel);
+		updAddressMap.put(player, addre);
         if(playersNum==nums){
 			SimpleGameRoom gameRoom = createGameRoom(0);
 			gameRoom.setUserService(userService);
-            for(Map.Entry<Player,Channel> entry:playersInWaitingMap.entrySet()){
-                Player _player = entry.getKey();
-                Channel _channel = entry.getValue();
-				handleGameRoomJoin(gameRoom,_player,_channel);
+            for(var p:playersInWaitingMap.keySet()){
+                
+				Channel _channel = playersInWaitingMap.get(p);
+				InetSocketAddress udpAddress = updAddressMap.get(p);
+				handleGameRoomJoin(gameRoom,p,_channel,udpAddress);
 			}
 			playersInWaitingMap.clear();
 			var holder = taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
@@ -103,10 +106,10 @@ public class CustomMatchmaker {
 			log.info("开始游戏:"+robots);
 			SimpleGameRoom gameRoom = createGameRoom(robots);
 			gameRoom.setUserService(userService);
-			for (Map.Entry<Player, Channel> entry : playersInWaitingMap.entrySet()) {
-				Player _player = entry.getKey();
-				Channel _channel = entry.getValue();
-				handleGameRoomJoin(gameRoom, _player, _channel);
+			for (var p : playersInWaitingMap.keySet()) {
+				Channel _channel = playersInWaitingMap.get(p);
+				InetSocketAddress udpAddress = updAddressMap.get(p);
+				handleGameRoomJoin(gameRoom, p, _channel,udpAddress);
 			}
 			playersInWaitingMap.clear();
 			var holder = taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
@@ -115,7 +118,7 @@ public class CustomMatchmaker {
 		}
 	}
 
-    public void handleGameRoomJoin(GameRoom gameRoom,Player player, Channel channel) {
+    public void handleGameRoomJoin(GameRoom gameRoom,Player player, Channel channel,InetSocketAddress udpAddress) {
 
 		if (null != gameRoom) {
 			PlayerSession playerSession = gameRoom.createPlayerSession(player);
@@ -128,7 +131,7 @@ public class CustomMatchmaker {
 					NettyUtils.createBufferForOpcode(Events.GAME_ROOM_JOIN_SUCCESS),
 					NettyUtils.writeString(reconnectKey));
 			ChannelFuture future = channel.write(reconnectKeyBuffer);
-			loginUdp(playerSession, channel);
+			loginUdp(playerSession, udpAddress);
 			connectToGameRoom(gameRoom, playerSession, future);
 			channel.flush();
 		}
@@ -182,10 +185,10 @@ public class CustomMatchmaker {
         return roomId.incrementAndGet();
 	}
 	
-	protected void loginUdp(PlayerSession playerSession, Channel channel) {
-		var remoteAdress = channel.remoteAddress();
-		if (null != remoteAdress) {
-			udpSessionRegistry.putSession(remoteAdress, playerSession);
+	protected void loginUdp(PlayerSession playerSession, InetSocketAddress udpAddress) {
+		log.info("啊啊啊啊 remoteAdress: "+udpAddress);
+		if (null != udpAddress) {
+			udpSessionRegistry.putSession(udpAddress, playerSession);
 		}
 	}
 

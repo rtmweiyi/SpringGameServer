@@ -1,5 +1,6 @@
 package com.weiyi.zhumao.handlers.netty;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import io.netty.buffer.ByteBuf;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.weiyi.zhumao.app.Session;
 import com.weiyi.zhumao.communication.MessageSender.Fast;
+import com.weiyi.zhumao.communication.NettyMessageBuffer;
 import com.weiyi.zhumao.communication.NettyUDPMessageSender;
 import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.Events;
@@ -44,6 +46,7 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPack
 	{
 		// Get the session using the remoteAddress.
 		SocketAddress remoteAddress = packet.sender();
+		
 		Session session = udpSessionRegistry.getSession(remoteAddress);
 		if(null != session)
 		{
@@ -86,7 +89,28 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPack
 		}
 		else
 		{
-			log.error("Packet received from unknown source address: {}, going to discard",remoteAddress);
+			try {
+				log.info("哔哔哔 remoteAddress：" + remoteAddress);
+				// 看看是不是连接命令
+				ByteBuf buffer = packet.content();
+				// 读长度
+				buffer.readInt();
+				// 读类型
+				Event event = (Event) messageBufferEventDecoder.decode(null, buffer);
+				if (event.getType() == Events.CONNECT) {
+					// 返回客户端地址，等发起加入房间命令的时候再发送过来
+					var eventContext = new NettyUDPMessageSender.EventContextImpl((InetSocketAddress) remoteAddress);
+					var reBuf = new NettyMessageBuffer();
+					reBuf.writeString(eventContext.getAttachment().getHostString());
+					reBuf.writeInt(eventContext.getAttachment().getPort());
+					var message = Events.event(reBuf, Events.UDP_CONNECT);
+					message.setEventContext(eventContext);
+					var channel = (DatagramChannel) ctx.channel();
+					channel.writeAndFlush(message);
+				}
+			} catch (Exception e) {
+				log.error("Packet received from unknown source address: {}, going to discard", remoteAddress);
+			}
 		}
 	}
 

@@ -13,10 +13,13 @@ import com.weiyi.zhumao.service.TaskManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @SpringBootApplication
 public class Application {
 
@@ -30,10 +33,10 @@ public class Application {
 
 	@SuppressWarnings({ "Convert2Lambda", "java:S1604" })
 	@Bean
-	public ApplicationListener<ApplicationEvent> readyApplicationListener() {
-		return new ApplicationListener<ApplicationEvent>() {
+	public ApplicationListener<ApplicationReadyEvent> readyApplicationListener() {
+		return new ApplicationListener<ApplicationReadyEvent>() {
 			@Override
-			public void onApplicationEvent(ApplicationEvent applicationReadyEvent) {
+			public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
 				try {
 					//检查游戏队列任务,每30秒检查一下是否一直有人等待
 					taskManagerService.scheduleAtFixedRate(new CheckMatchTask(customMatchMaker), 0, 10, TimeUnit.SECONDS);

@@ -1,11 +1,11 @@
 package com.weiyi.zhumao.handlers.netty;
 
+import java.net.InetSocketAddress;
 // import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 // import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.swing.text.DefaultEditorKit.CutAction;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import com.weiyi.zhumao.app.GameRoom;
-import com.weiyi.zhumao.app.Player;
 import com.weiyi.zhumao.app.PlayerSession;
 import com.weiyi.zhumao.app.Session;
 import com.weiyi.zhumao.app.impl.DefaultPlayer;
@@ -27,14 +26,12 @@ import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.Events;
 import com.weiyi.zhumao.event.impl.ReconnetEvent;
 import com.weiyi.zhumao.game.CustomMatchmaker;
-// import com.weiyi.zhumao.game.SyncTask;
 import com.weiyi.zhumao.service.SessionRegistryService;
 import com.weiyi.zhumao.service.TaskManagerService;
-// import com.weiyi.zhumao.service.UniqueIDGeneratorService;
+
 import com.weiyi.zhumao.service.impl.ReconnectSessionRegistry;
 import com.weiyi.zhumao.service.impl.UserService;
 
-// import com.weiyi.zhumao.util.JetConfig;
 import com.weiyi.zhumao.util.NettyUtils;
 import com.weiyi.zhumao.util.RandomString;
 
@@ -54,6 +51,7 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 	@Autowired
 	TaskManagerService taskManagerService;
 
+	@Autowired
 	protected SessionRegistryService<SocketAddress> udpSessionRegistry;
 	protected ReconnectSessionRegistry reconnectRegistry;
 
@@ -304,12 +302,12 @@ public class LoginHandler extends SimpleChannelInboundHandler<Object> {
 	 * @param buffer        Used to read the remote address of the client which is
 	 *                      attempting to connect via udp.
 	 */
-	// protected void loginUdp(PlayerSession playerSession, ByteBuf buffer) {
-	// InetSocketAddress remoteAdress = NettyUtils.readSocketAddress(buffer);
-	// if (null != remoteAdress) {
-	// udpSessionRegistry.putSession(remoteAdress, playerSession);
-	// }
-	// }
+	protected void loginUdp(PlayerSession playerSession, ByteBuf buffer) {
+		InetSocketAddress remoteAdress = NettyUtils.readSocketAddress(buffer);
+		if (null != remoteAdress) {
+			udpSessionRegistry.putSession(remoteAdress, playerSession);
+		}
+	}
 
 	// public UniqueIDGeneratorService getIdGeneratorService() {
 	// 	return idGeneratorService;

@@ -22,25 +22,25 @@ public class Command implements Comparable<Command>{
         tick = inbuf.readInt();
         timestamp = inbuf.readLong();
         cmdType = inbuf.readInt();
-        switch (cmdType) {
-            case 1:
-                content.add((float) inbuf.readFloat());
-                content.add((float) inbuf.readFloat());
-                break;
-            case 3:
-                content.add((int) inbuf.readInt());
-                content.add((long) inbuf.readLong());
-                break;
-            case 4:
-                content.add((long) inbuf.readLong());
-                break;
-            case 5:
-                content.add((long) inbuf.readLong());
-                break;
-            default:
-                break;
-        }
-        playerId = inbuf.readInt();
+        // switch (cmdType) {
+        //     case 1:
+        //         content.add((float) inbuf.readFloat());
+        //         content.add((float) inbuf.readFloat());
+        //         break;
+        //     case 3:
+        //         content.add((int) inbuf.readInt());
+        //         content.add((long) inbuf.readLong());
+        //         break;
+        //     case 4:
+        //         content.add((long) inbuf.readLong());
+        //         break;
+        //     case 5:
+        //         content.add((long) inbuf.readLong());
+        //         break;
+        //     default:
+        //         break;
+        // }
+        // playerId = inbuf.readInt();
     }
 
     public Command() {

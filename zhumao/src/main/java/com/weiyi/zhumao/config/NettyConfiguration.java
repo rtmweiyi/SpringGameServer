@@ -1,9 +1,9 @@
 package com.weiyi.zhumao.config;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 
-import com.weiyi.zhumao.handlers.GameServerChannelInitializer;
 import com.weiyi.zhumao.server.netty.NettyConfig;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,15 +12,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.netty.bootstrap.ServerBootstrap;
-// import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
-import io.netty.channel.ChannelOption;
+
+import com.weiyi.zhumao.service.SessionRegistryService;
+import com.weiyi.zhumao.service.impl.SessionRegistry;
 
 @Configuration
 @EnableConfigurationProperties(NettyProperties.class)
@@ -57,10 +54,6 @@ public class NettyConfiguration {
         return new NioEventLoopGroup(nettyProperties.getWorkerCount());
     }
 
-    @Bean
-    public InetSocketAddress tcpSocketAddress() {
-        return new InetSocketAddress(nettyProperties.getTcpPort());
-    }
 
     @Bean
     public LengthFieldPrepender createLengthFieldPrepender(){
@@ -92,5 +85,10 @@ public class NettyConfiguration {
         config.setWorkerGroup(workerGroup);
         config.setPortNumber(nettyProperties.getTcpPort());
         return config;
+    }
+
+    @Bean("udpSessionRegistry")
+    public SessionRegistryService<SocketAddress> getUdpSessionRegistry(){
+        return new SessionRegistry<SocketAddress>();
     }
 }

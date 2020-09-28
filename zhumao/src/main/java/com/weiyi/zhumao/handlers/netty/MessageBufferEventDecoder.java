@@ -3,13 +3,17 @@ package com.weiyi.zhumao.handlers.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 import com.weiyi.zhumao.communication.NettyMessageBuffer;
+import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.Events;
+
+import org.springframework.stereotype.Component;
+import io.netty.channel.ChannelHandler.Sharable;
 
 /**
  * This decoder will convert a Netty {@link ChannelBuffer} to a
@@ -21,7 +25,9 @@ import com.weiyi.zhumao.event.Events;
  * 
  */
 @Slf4j
-public class MessageBufferEventDecoder extends ByteToMessageDecoder {
+@Sharable
+@Component
+public class MessageBufferEventDecoder extends MessageToMessageDecoder<ByteBuf>{
 
 
     @Override
@@ -30,13 +36,24 @@ public class MessageBufferEventDecoder extends ByteToMessageDecoder {
             log.error("Null message received in MessageBufferEventDecoder");
         }
 
-        byte opcode = in.readByte();
-        if (opcode == Events.NETWORK_MESSAGE) {
-            opcode = Events.SESSION_MESSAGE;
-        }
-        ByteBuf buf = Unpooled.buffer(in.readableBytes());
-        in.readBytes(buf);
+        // byte opcode = in.readByte();
+        // if (opcode == Events.NETWORK_MESSAGE) {
+        //     opcode = Events.SESSION_MESSAGE;
+        // }
+        // ByteBuf buf = Unpooled.buffer(in.readableBytes());
+        // in.readBytes(buf);
         
-        out.add(Events.event(new NettyMessageBuffer(buf), opcode));
+        // out.add(Events.event(new NettyMessageBuffer(buf), opcode));
+        out.add(decode(ctx, in));
     }
+
+    public Event decode(ChannelHandlerContext ctx, ByteBuf in){
+		byte opcode = in.readByte();
+		if (opcode == Events.NETWORK_MESSAGE) 
+		{
+			opcode = Events.SESSION_MESSAGE;
+		}
+		ByteBuf data = in.readBytes(in.readableBytes());
+		return Events.event(new NettyMessageBuffer(data), opcode);
+	}
 }

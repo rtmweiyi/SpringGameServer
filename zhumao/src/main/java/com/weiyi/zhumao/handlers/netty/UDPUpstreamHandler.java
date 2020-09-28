@@ -3,11 +3,12 @@ package com.weiyi.zhumao.handlers.netty;
 import java.net.SocketAddress;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
+// import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 // import io.netty.channel.MessageEvent;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.DatagramPacket;
 import lombok.extern.slf4j.Slf4j;
 
 import com.weiyi.zhumao.app.Session;
@@ -16,37 +17,60 @@ import com.weiyi.zhumao.communication.NettyUDPMessageSender;
 import com.weiyi.zhumao.event.Event;
 import com.weiyi.zhumao.event.Events;
 import com.weiyi.zhumao.service.SessionRegistryService;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-public class UDPUpstreamHandler extends SimpleChannelInboundHandler<Object>
+@Component
+public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPacket>
 {
+	private static final String UDP_CONNECTING = "UDP_CONNECTING";
+	@Autowired
+	@Qualifier("udpSessionRegistry")
 	private SessionRegistryService<SocketAddress> udpSessionRegistry;
+
+	@Autowired
+	private MessageBufferEventDecoder messageBufferEventDecoder;
 	public UDPUpstreamHandler()
 	{
 		super();
 	}
 	
 	@Override
-	public void channelRead0(ChannelHandlerContext ctx, Object e)
+	public void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet)
 			throws Exception
 	{
-		Channel channel = ctx.channel();
 		// Get the session using the remoteAddress.
-		SocketAddress remoteAddress = channel.remoteAddress();
+		SocketAddress remoteAddress = packet.sender();
 		Session session = udpSessionRegistry.getSession(remoteAddress);
 		if(null != session)
 		{
-			Event event = (Event)e;
+			ByteBuf buffer = packet.content();
+			//读一下长度
+			buffer.readInt();
+			Event event = (Event) messageBufferEventDecoder
+					.decode(null, buffer);
 			// If the session's UDP has not been connected yet then send a
 			// CONNECT event.
 			if (!session.isUDPEnabled())
 			{
-				event = getUDPConnectEvent(event, remoteAddress,
-						(DatagramChannel) channel);
-				// Pass the connect event on to the session
-				session.onEvent(event);
+				if (null == session.getAttribute(UDP_CONNECTING)
+						|| (!(Boolean) session.getAttribute(UDP_CONNECTING))) 
+				{
+					session.setAttribute(UDP_CONNECTING, true);
+					event = getUDPConnectEvent(event, remoteAddress,
+							(DatagramChannel) ctx.channel());
+					// Pass the connect event on to the session
+					session.onEvent(event);
+				}
+				else
+				{
+					log.info("Going to discard UDP Message Event with type {} "
+							+ "the UDP MessageSender is not initialized fully",
+							event.getType());
+				}
 			}
 			else if (event.getType() == Events.CONNECT)
 			{
@@ -62,7 +86,7 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<Object>
 		}
 		else
 		{
-			log.trace("Packet received from unknown source address: {}, going to discard",remoteAddress);
+			log.error("Packet received from unknown source address: {}, going to discard",remoteAddress);
 		}
 	}
 
@@ -74,7 +98,7 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<Object>
 		
 		if (event.getType() != Events.CONNECT)
 		{
-			log.warn("Going to discard UDP Message Event with type {} "
+			log.info("Going to discard UDP Message Event with type {} "
 					+ "It will get converted to a CONNECT event since "
 					+ "the UDP MessageSender is not initialized till now",
 					event.getType());

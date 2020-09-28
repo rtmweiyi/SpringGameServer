@@ -8,7 +8,9 @@ mysqldb:
 gameserver:
   image: zhumao:latest
   ports:
-    - "5000:5000"
+    - 5000:5000/tcp
+    - 5000:5000/udp
+  # net: "host"
   links:
     - mysqldb
   restart: unless-stopped

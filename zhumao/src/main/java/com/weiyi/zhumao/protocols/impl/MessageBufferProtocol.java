@@ -24,8 +24,12 @@ public class MessageBufferProtocol extends AbstractNettyProtocol
 	 */
 	@Autowired
 	private LengthFieldPrepender lengthFieldPrepender;
-	// @Autowired
-	// private MessageBufferEventEncoder messageBufferEventEncoder;
+
+	@Autowired 
+	MessageBufferEventDecoder messageBufferEventDecoder;
+
+	@Autowired
+	MessageBufferEventEncoder messageBufferEventEncoder;
 	
 	public MessageBufferProtocol()
 	{
@@ -44,7 +48,7 @@ public class MessageBufferProtocol extends AbstractNettyProtocol
 		// Upstream handlers or encoders (i.e towards server) are added to
 		// pipeline now.
 		pipeline.addLast("lengthDecoder", createLengthBasedFrameDecoder());
-		pipeline.addLast("messageBufferEventDecoder", new MessageBufferEventDecoder());
+		pipeline.addLast("messageBufferEventDecoder", messageBufferEventDecoder);
 		pipeline.addLast("eventHandler", new DefaultToServerHandler(
 				playerSession));
 
@@ -52,7 +56,7 @@ public class MessageBufferProtocol extends AbstractNettyProtocol
 		// client. Note that the last handler added is actually the first
 		// handler for outgoing data.
 		pipeline.addLast("lengthFieldPrepender", lengthFieldPrepender);
-		pipeline.addLast("messageBufferEventEncoder",new MessageBufferEventEncoder());
+		pipeline.addLast("messageBufferEventEncoder",messageBufferEventEncoder);
 
 	}
 

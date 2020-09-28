@@ -5,13 +5,14 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import lombok.extern.slf4j.Slf4j;
 
-import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * This server does UDP connection less broadcast. Since it does not store the
@@ -25,11 +26,12 @@ import org.slf4j.LoggerFactory;
  * @author Abraham Menacherry
  * 
  */
+@Slf4j
+@Component
 public class NettyUDPServer extends AbstractNettyServer {
-    private static final Logger LOG = LoggerFactory.getLogger(NettyUDPServer.class);
     private Bootstrap bootstrap;
 
-    public NettyUDPServer(NettyConfig nettyConfig, ChannelInitializer<? extends Channel> channelInitializer) 
+    public NettyUDPServer(@Qualifier("UDPConfig") NettyConfig nettyConfig,@Autowired UDPChannelInitializer channelInitializer) 
 	{
 		super(nettyConfig, channelInitializer);
 	}
@@ -52,23 +54,28 @@ public class NettyUDPServer extends AbstractNettyServer {
         bootstrap.handler(initializer);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void startServer(InetSocketAddress socketAddress) throws Exception {
+    public void startServer() throws Exception {
         try {
             bootstrap = new Bootstrap();
-            Map<ChannelOption<?>, Object> channelOptions = nettyConfig.getChannelOptions();
-            if (null != channelOptions) {
-                Set<ChannelOption<?>> keySet = channelOptions.keySet();
-                for (@SuppressWarnings("rawtypes")
-                ChannelOption option : keySet) {
-                    bootstrap.option(option, channelOptions.get(option));
-                }
-            }
-            Channel channel = bootstrap.group(getBossGroup()).channel(NioDatagramChannel.class)
-                    .handler(getChannelInitializer()).bind(nettyConfig.getSocketAddress()).channel();
-            ALL_CHANNELS.add(channel);
+			Map<ChannelOption<?>, Object> channelOptions = nettyConfig
+					.getChannelOptions();
+			if (null != channelOptions) 
+			{
+				Set<ChannelOption<?>> keySet = channelOptions.keySet();
+				for (@SuppressWarnings("rawtypes") ChannelOption option : keySet) 
+				{
+					bootstrap.option(option, channelOptions.get(option));
+				}
+			}
+			Channel channel = bootstrap.group(getBossGroup())
+					.channel(NioDatagramChannel.class)
+					.handler(getChannelInitializer())
+					.bind(nettyConfig.getSocketAddress()).channel();
+			ALL_CHANNELS.add(channel);
         } catch (Exception e) {
-            LOG.error("UDP Server start error {}, going to shut down", e);
+            log.error("UDP Server start error {}, going to shut down", e);
             super.stopServer();
             throw e;
         }

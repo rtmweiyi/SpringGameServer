@@ -2,9 +2,10 @@ package com.weiyi.zhumao.server.netty;
 
 import java.net.InetSocketAddress;
 
-import io.netty.bootstrap.ServerBootstrap;
+// import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.ChannelGroupFuture;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -16,14 +17,11 @@ import com.weiyi.zhumao.app.Session;
 import com.weiyi.zhumao.service.GameAdminService;
 // import org.springframework.beans.factory.annotation.Required;
 
-import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public abstract class AbstractNettyServer implements NettyServer {
 	protected Session session;
-	protected InetSocketAddress socketAddress;
-	@Autowired
-	protected ServerBootstrap serverBootstrap;
 	protected GameAdminService gameAdminService;
 
 	public static final ChannelGroup ALL_CHANNELS = new DefaultChannelGroup("NADRON-CHANNELS",
@@ -91,14 +89,16 @@ public abstract class AbstractNettyServer implements NettyServer {
 	}
 
 	@Override
-	public InetSocketAddress getSocketAddress() {
-		return socketAddress;
+	public InetSocketAddress getSocketAddress()
+	{
+		return nettyConfig.getSocketAddress();
 	}
 
 
 	@Override
 	public String toString() {
-		return "NettyServer [socketAddress=" + socketAddress + ", portNumber=" + socketAddress.getPort() + "]";
+		return "NettyServer [socketAddress=" + nettyConfig.getSocketAddress()
+				+ ", portNumber=" + nettyConfig.getPortNumber() + "]";
 	}
 
 	@Override
@@ -109,6 +109,14 @@ public abstract class AbstractNettyServer implements NettyServer {
 	@Override
 	public void setSession(Session session) {
 		this.session = session;
+	}
+
+	protected EventLoopGroup getBossGroup(){
+		return nettyConfig.getBossGroup();
+	}
+	
+	protected EventLoopGroup getWorkerGroup(){
+		return nettyConfig.getWorkerGroup();
 	}
 
 }

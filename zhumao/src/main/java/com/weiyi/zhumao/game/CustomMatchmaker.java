@@ -1,5 +1,7 @@
 package com.weiyi.zhumao.game;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +19,7 @@ import com.weiyi.zhumao.config.AppProperties;
 import com.weiyi.zhumao.event.Events;
 import com.weiyi.zhumao.protocols.impl.LobbyProtocol;
 import com.weiyi.zhumao.protocols.impl.MessageBufferProtocol;
+import com.weiyi.zhumao.service.SessionRegistryService;
 import com.weiyi.zhumao.service.TaskManagerService;
 import com.weiyi.zhumao.service.UniqueIDGeneratorService;
 import com.weiyi.zhumao.service.impl.ReconnectSessionRegistry;
@@ -52,6 +55,9 @@ public class CustomMatchmaker {
 	@Autowired
 	UserService userService;
 
+	@Autowired
+	SessionRegistryService<SocketAddress> udpSessionRegistry;
+
 
 	private int nums;
 	private boolean checkPoint = false;
@@ -81,7 +87,7 @@ public class CustomMatchmaker {
             for(Map.Entry<Player,Channel> entry:playersInWaitingMap.entrySet()){
                 Player _player = entry.getKey();
                 Channel _channel = entry.getValue();
-                handleGameRoomJoin(gameRoom,_player,_channel);
+				handleGameRoomJoin(gameRoom,_player,_channel);
 			}
 			playersInWaitingMap.clear();
 			var holder = taskManagerService.scheduleAtFixedRate(new SyncTask(gameRoom), 0, 50, TimeUnit.MILLISECONDS);
@@ -122,6 +128,7 @@ public class CustomMatchmaker {
 					NettyUtils.createBufferForOpcode(Events.GAME_ROOM_JOIN_SUCCESS),
 					NettyUtils.writeString(reconnectKey));
 			ChannelFuture future = channel.write(reconnectKeyBuffer);
+			loginUdp(playerSession, channel);
 			connectToGameRoom(gameRoom, playerSession, future);
 			channel.flush();
 		}
@@ -147,12 +154,14 @@ public class CustomMatchmaker {
 					// Clear the existing pipeline
 					NettyUtils.clearPipeline(channel.pipeline());
 					// Set the tcp channel on the session.
-					NettyTCPMessageSender sender = new NettyTCPMessageSender(channel);
-					playerSession.setTcpSender(sender);
+					NettyTCPMessageSender tcpSender = new NettyTCPMessageSender(channel);
+					playerSession.setTcpSender(tcpSender);
 					// Connect the pipeline to the game room.
 					gameRoom.connectSession(playerSession);
-					// Send the connect event so that it will in turn send the START event.
-					playerSession.onEvent(Events.connectEvent(sender));
+					// // Send the connect event so that it will in turn send the START event.
+					// playerSession.onEvent(Events.connectEvent(sender));
+					// send the start event to remote client.
+					tcpSender.sendMessage(Events.event(null, Events.START));
 				} else {
 					log.error("GAME_ROOM_JOIN_SUCCESS message sending to client was failure, channel will be closed");
 					channel.close();
@@ -171,6 +180,13 @@ public class CustomMatchmaker {
 
 	public long getNextId() {
         return roomId.incrementAndGet();
-    }
+	}
+	
+	protected void loginUdp(PlayerSession playerSession, Channel channel) {
+		var remoteAdress = channel.remoteAddress();
+		if (null != remoteAdress) {
+			udpSessionRegistry.putSession(remoteAdress, playerSession);
+		}
+	}
 
 }

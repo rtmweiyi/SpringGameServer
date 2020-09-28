@@ -5,6 +5,7 @@ import java.util.List;
 import com.weiyi.zhumao.communication.MessageBuffer;
 import com.weiyi.zhumao.event.Event;
 
+import org.springframework.stereotype.Component;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Sharable
+@Component
 public class MessageBufferEventEncoder extends MessageToMessageEncoder<Event> {
 
     @Override

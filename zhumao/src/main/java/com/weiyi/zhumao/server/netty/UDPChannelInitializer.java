@@ -2,12 +2,16 @@ package com.weiyi.zhumao.server.netty;
 
 import com.weiyi.zhumao.handlers.netty.UDPEventEncoder;
 import com.weiyi.zhumao.handlers.netty.UDPUpstreamHandler;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramChannel;
 
 
-
+@Component
 public class UDPChannelInitializer extends ChannelInitializer<DatagramChannel>
 {
 	/**
@@ -16,9 +20,10 @@ public class UDPChannelInitializer extends ChannelInitializer<DatagramChannel>
 	 * different channels as the protocol is essentially "connection-less"
 	 */
 	ChannelPipeline pipeline;
+	@Autowired
 	private UDPEventEncoder udpEventEncoder;
-	
 	// Create a default pipeline implementation.
+	@Autowired
 	private UDPUpstreamHandler upstream;
 
 	public UDPChannelInitializer()

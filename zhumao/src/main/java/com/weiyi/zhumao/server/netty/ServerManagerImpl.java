@@ -1,6 +1,5 @@
 package com.weiyi.zhumao.server.netty;
 
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,10 +19,10 @@ public class ServerManagerImpl implements ServerManager
 	private Set<AbstractNettyServer> servers;
     
     @Autowired
-	AbstractNettyServer tcpServer;
+	NettyTCPServer tcpServer;
 
-	// @Autowired
-	// InetSocketAddress socketAddress;
+	@Autowired
+	NettyUDPServer udpServer;
 
 	
 	public ServerManagerImpl()
@@ -34,9 +33,12 @@ public class ServerManagerImpl implements ServerManager
 	@Override
 	public void startServers() throws Exception 
 	{
-		// log.info("Server start!");
-		// tcpServer.startServer(socketAddress);
+		log.info("Server tcp start!");
+		tcpServer.startServer();
 		servers.add(tcpServer);
+		log.info("Server udp start!");
+		udpServer.startServer();
+		servers.add(udpServer);
 	}
 	
 	@Override

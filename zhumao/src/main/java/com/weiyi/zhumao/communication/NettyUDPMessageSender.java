@@ -1,5 +1,6 @@
 package com.weiyi.zhumao.communication;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import io.netty.channel.socket.DatagramChannel;
@@ -8,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.weiyi.zhumao.app.Session;
 import com.weiyi.zhumao.communication.DeliveryGuaranty.DeliveryGuarantyOptions;
 import com.weiyi.zhumao.communication.MessageSender.Fast;
+import com.weiyi.zhumao.event.Event;
+import com.weiyi.zhumao.event.EventContext;
 import com.weiyi.zhumao.event.Events;
 import com.weiyi.zhumao.event.impl.DefaultNetworkEvent;
 import com.weiyi.zhumao.handlers.netty.UDPUpstreamHandler;
@@ -30,7 +33,7 @@ public class NettyUDPMessageSender implements Fast
 	private final SocketAddress remoteAddress;
 	private final DatagramChannel channel;
 	private final SessionRegistryService<SocketAddress> sessionRegistryService;
-
+	private final EventContext eventContext;
 	private static final DeliveryGuaranty DELIVERY_GUARANTY = DeliveryGuarantyOptions.FAST;
 
 	public NettyUDPMessageSender(SocketAddress remoteAddress,
@@ -40,13 +43,17 @@ public class NettyUDPMessageSender implements Fast
 		this.remoteAddress = remoteAddress;
 		this.channel = channel;
 		this.sessionRegistryService = sessionRegistryService;
+		this.eventContext = new EventContextImpl((InetSocketAddress)remoteAddress);
 	}
 
 	@Override
 	public Object sendMessage(Object message)
 	{
-		// return channel.write(message, remoteAddress);
-		return channel.write(message);
+		// TODO this might overwrite valid context, check for better design
+		if(message instanceof Event){
+			((Event)message).setEventContext(eventContext);
+		}
+		return channel.writeAndFlush(message);
 	}
 
 	@Override
@@ -100,5 +107,31 @@ public class NettyUDPMessageSender implements Fast
 	protected SessionRegistryService<SocketAddress> getSessionRegistryService()
 	{
 		return sessionRegistryService;
+	}
+
+	protected static class EventContextImpl implements EventContext
+	{
+		final InetSocketAddress clientAddress;
+		public EventContextImpl(InetSocketAddress clientAddress){
+			this.clientAddress = clientAddress;
+		}
+		@Override
+		public Session getSession() {
+			return null;
+		}
+
+		@Override
+		public void setSession(Session session) {
+		}
+
+		@Override
+		public InetSocketAddress getAttachment() {
+			return clientAddress;
+		}
+
+		@Override
+		public void setAttachment(Object attachement) {
+		}
+		
 	}
 }

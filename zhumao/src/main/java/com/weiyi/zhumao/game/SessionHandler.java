@@ -27,9 +27,9 @@ public class SessionHandler extends DefaultSessionEventHandler implements GameCo
         @SuppressWarnings("unchecked")
         MessageBuffer<ByteBuf> msgbuf = (MessageBuffer<ByteBuf>) command;
         ByteBuf buf = msgbuf.getNativeBuffer();
-        ByteBuf timeBuf = Unpooled.buffer(8);
-        timeBuf.writeLong(System.currentTimeMillis());
-        buf = Unpooled.wrappedBuffer(timeBuf,buf);
+        // ByteBuf timeBuf = Unpooled.buffer(8);
+        // timeBuf.writeLong(System.currentTimeMillis());
+        // buf = Unpooled.wrappedBuffer(timeBuf,buf);
         ByteBuf tickbuf = Unpooled.buffer(4);
         PlayerSession pSession = (PlayerSession) getSession();
         GameRoom gameRoom = pSession.getGameRoom();

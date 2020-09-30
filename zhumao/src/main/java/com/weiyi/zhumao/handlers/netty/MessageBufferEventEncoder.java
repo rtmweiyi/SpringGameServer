@@ -28,22 +28,24 @@ public class MessageBufferEventEncoder extends MessageToMessageEncoder<Event> {
 	{
 		if(null ==event){
             log.error("Null message received in MessageBufferEventEncoder");
+            return null;
         }
-		ByteBuf opcode = Unpooled.buffer(1);
-		opcode.writeByte(event.getType());
-        ByteBuf buffer = null;
-        
+		
+        ByteBuf msg = null;
         if(null != event.getSource())
 		{
 			@SuppressWarnings("unchecked")
 			MessageBuffer<ByteBuf> msgBuffer = (MessageBuffer<ByteBuf>)event.getSource();
-			ByteBuf data = msgBuffer.getNativeBuffer();
-			buffer = Unpooled.wrappedBuffer(opcode, data);
+            ByteBuf data = Unpooled.copiedBuffer(msgBuffer.getNativeBuffer());
+            ByteBuf opcode = ctx.alloc().buffer(1);
+		    opcode.writeByte(event.getType());
+			msg = Unpooled.wrappedBuffer(opcode, data);
         }
         else{
-            buffer = opcode;
+            msg = ctx.alloc().buffer(1);
+			msg.writeByte(event.getType());
         }
-        return buffer;
+        return msg;
 	}
     
 }

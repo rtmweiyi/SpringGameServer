@@ -11,36 +11,43 @@ import lombok.Setter;
 @Getter
 public class Command implements Comparable<Command>{
     protected int tick;
-    protected long timestamp;
-    protected int playerId;
+    protected long playerId;
     protected int cmdType;
     protected List<Object> content = new ArrayList<>();
     protected ByteBuf buf;
+    protected int localTick;
 
     public Command(ByteBuf inbuf) {
         buf = inbuf.copy();
         tick = inbuf.readInt();
-        timestamp = inbuf.readLong();
         cmdType = inbuf.readInt();
-        // switch (cmdType) {
-        //     case 1:
-        //         content.add((float) inbuf.readFloat());
-        //         content.add((float) inbuf.readFloat());
-        //         break;
-        //     case 3:
-        //         content.add((int) inbuf.readInt());
-        //         content.add((long) inbuf.readLong());
-        //         break;
-        //     case 4:
-        //         content.add((long) inbuf.readLong());
-        //         break;
-        //     case 5:
-        //         content.add((long) inbuf.readLong());
-        //         break;
-        //     default:
-        //         break;
-        // }
-        // playerId = inbuf.readInt();
+        localTick = inbuf.readInt();
+        playerId = inbuf.readLong();
+        switch (cmdType) {
+            case 1:
+                content.add((float) inbuf.readFloat());
+                content.add((float) inbuf.readFloat());
+                content.add((float) inbuf.readFloat());
+                content.add((float) inbuf.readFloat());
+                content.add((float) inbuf.readFloat());
+                content.add((float) inbuf.readFloat());
+                content.add((int) inbuf.readInt());
+                break;
+            case 3:
+                content.add((int) inbuf.readInt());
+                content.add((long) inbuf.readLong());
+                break;
+            case 4:
+                content.add((long) inbuf.readLong());
+                content.add((long) inbuf.readLong());
+                break;
+            case 5:
+                content.add((long) inbuf.readLong());
+                break;
+            default:
+                break;
+        }
+        
     }
 
     public Command() {
@@ -84,7 +91,7 @@ public class Command implements Comparable<Command>{
 
     @Override
     public int hashCode() {
-        int result = tick + playerId + cmdType + content.hashCode() + buf.hashCode();
+        int result = tick + (playerId+"").hashCode() + cmdType + content.hashCode() + buf.hashCode();
         return result;
     }
 

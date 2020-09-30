@@ -30,7 +30,8 @@ public class UDPEventEncoder extends MessageBufferEventEncoder
 
 		InetSocketAddress clientAddress = (InetSocketAddress) event
 				.getEventContext().getAttachment();
-		out.add(new DatagramPacket(Unpooled.wrappedBuffer(lenbuf,data), clientAddress));
+		var dataZ = Unpooled.wrappedBuffer(lenbuf,data);
+		out.add(new DatagramPacket(dataZ, clientAddress));
 		// out.add(data);
 	}
 	

@@ -98,9 +98,11 @@ public class SimpleGameRoom extends GameRoomSession {
                 float[] robotPoint = spawnPoints.poll();
                 NettyMessageBuffer robotBuf = new NettyMessageBuffer();
                 robotBuf.writeInt(tick);
-                robotBuf.writeLong(System.currentTimeMillis());
+                // robotBuf.writeLong(System.currentTimeMillis());
                 robotBuf.writeInt(Commands.robot_spawn);
+                robotBuf.writeInt(Integer.MAX_VALUE);
                 long ronbotId = Tools.getRobotId();
+                robotBuf.writeLong(ronbotId);
                 robotBuf.writeLong(ronbotId);
                 robotsIds.add(ronbotId);
                 robotBuf.writeFloat(robotPoint[0]);
@@ -109,7 +111,6 @@ public class SimpleGameRoom extends GameRoomSession {
                 // TODO 到时候用随机名字
                 robotBuf.writeString("Robot" + i);
                 // 服务端发端信息,这里暂时用最大值做id，以后再看有没有更好的办法
-                robotBuf.writeLong(Long.MAX_VALUE);
                 var event = Events.event(robotBuf, Events.NETWORK_MESSAGE);
                 NetworkEvent networkEvent = new DefaultNetworkEvent(event);
                 sendBroadcast(networkEvent);
@@ -126,14 +127,17 @@ public class SimpleGameRoom extends GameRoomSession {
 
                 NettyMessageBuffer activeBuf = new NettyMessageBuffer();
                 activeBuf.writeInt(tick);
-                activeBuf.writeLong(System.currentTimeMillis());
+                // activeBuf.writeLong(System.currentTimeMillis());
                 activeBuf.writeInt(Commands.active_robot);
+                activeBuf.writeInt(Integer.MAX_VALUE);
+                
                 long activeInPlayerId = (long) sessions.get(playerIdToActiveRobot).getPlayer().getId();
                 robotsAndPlayers.put(robotId, activeInPlayerId);
                 activeBuf.writeLong(robotId);
+                activeBuf.writeLong(robotId);
                 playerIdToActiveRobot++;
                 activeBuf.writeLong(activeInPlayerId);
-                activeBuf.writeLong(Long.MAX_VALUE);
+                
                 var event = Events.event(activeBuf, Events.NETWORK_MESSAGE);
                 NetworkEvent networkEvent = new DefaultNetworkEvent(event);
                 sendBroadcast(networkEvent);
@@ -152,8 +156,10 @@ public class SimpleGameRoom extends GameRoomSession {
         }
         NettyMessageBuffer buf = new NettyMessageBuffer();
         buf.writeInt(tick);
-        buf.writeLong(System.currentTimeMillis());
+        // buf.writeLong(System.currentTimeMillis());
         buf.writeInt(Commands.spawn);
+        buf.writeInt(Integer.MAX_VALUE);
+        buf.writeLong((long) playerSession.getPlayer().getId());
         buf.writeFloat(point[0]);
         buf.writeFloat(point[1]);
         buf.writeFloat(point[2]);
@@ -161,7 +167,7 @@ public class SimpleGameRoom extends GameRoomSession {
         // 从数据库中获取currentcar
         var user = userService.getUserById((long) playerSession.getPlayer().getId());
         buf.writeString(user.getCurrentCar());
-        buf.writeLong((long) playerSession.getPlayer().getId());
+        
         var event = Events.event(buf, Events.NETWORK_MESSAGE);
         NetworkEvent networkEvent = new DefaultNetworkEvent(event);
         sendBroadcast(networkEvent);
@@ -200,12 +206,13 @@ public class SimpleGameRoom extends GameRoomSession {
                             long activeInPlayerId = (long) sessions.get(index).getPlayer().getId();
                             NettyMessageBuffer activeBuf = new NettyMessageBuffer();
                             activeBuf.writeInt(tick);
-                            activeBuf.writeLong(System.currentTimeMillis());
+                            // activeBuf.writeLong(System.currentTimeMillis());
                             activeBuf.writeInt(Commands.active_robot);
+                            activeBuf.writeInt(Integer.MAX_VALUE);
+                            activeBuf.writeLong(robotId);
                             robotsAndPlayers.put(robotId, activeInPlayerId);
                             activeBuf.writeLong(robotId);
                             activeBuf.writeLong(activeInPlayerId);
-                            activeBuf.writeLong(Long.MAX_VALUE);
                             var event = Events.event(activeBuf, Events.NETWORK_MESSAGE);
                             NetworkEvent networkEvent = new DefaultNetworkEvent(event);
                             sendBroadcast(networkEvent);
@@ -229,8 +236,9 @@ public class SimpleGameRoom extends GameRoomSession {
                 // 房间只剩一个玩家，且没有机器人，发送玩家赢事件
                 NettyMessageBuffer buf = new NettyMessageBuffer();
                 buf.writeInt(tick);
-                buf.writeLong(System.currentTimeMillis());
+                // buf.writeLong(System.currentTimeMillis());
                 buf.writeInt(Commands.win);
+                buf.writeInt(Integer.MAX_VALUE);
                 buf.writeLong((long) winSession.getPlayer().getId());
                 buf.writeLong((long) winSession.getPlayer().getId());
                 var event = Events.event(buf, Events.NETWORK_MESSAGE);

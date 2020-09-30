@@ -52,9 +52,10 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPack
 		{
 			ByteBuf buffer = packet.content();
 			//读一下长度
-			buffer.readInt();
+			int len = buffer.readInt();
+			var buuf = buffer.readBytes(len);
 			Event event = (Event) messageBufferEventDecoder
-					.decode(null, buffer);
+					.decode(null, buuf);
 			// If the session's UDP has not been connected yet then send a
 			// CONNECT event.
 			if (!session.isUDPEnabled())
@@ -67,6 +68,12 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPack
 							(DatagramChannel) ctx.channel());
 					// Pass the connect event on to the session
 					session.onEvent(event);
+					while(buffer.readerIndex()<buffer.writerIndex()){
+						int l = buffer.readInt();
+						var b = buffer.readBytes(l);
+						var e = (Event) messageBufferEventDecoder.decode(null, b);
+						session.onEvent(e);
+					}
 				}
 				else
 				{
@@ -85,6 +92,12 @@ public class UDPUpstreamHandler extends SimpleChannelInboundHandler<DatagramPack
 			{
 				// Pass the original event on to the session
 				session.onEvent(event);
+				while(buffer.readerIndex()<buffer.writerIndex()){
+					int l = buffer.readInt();
+					var b = buffer.readBytes(l);
+					var e = (Event) messageBufferEventDecoder.decode(null, b);
+					session.onEvent(e);
+				}
 			}
 		}
 		else
